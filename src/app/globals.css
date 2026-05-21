@@ -1,0 +1,117 @@
+/* src/app/globals.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --radius: 0.75rem;
+    --surface-0: #0a0a0f;
+    --surface-1: #12121a;
+    --surface-2: #1a1a26;
+    --surface-3: #242433;
+    --accent: #7c6aff;
+    --accent-2: #a78bfa;
+    --accent-3: #c4b5fd;
+    --green: #22d3a5;
+    --orange: #f97316;
+    --red: #f43f5e;
+    --border: #2a2740;
+    --border-2: #3d3960;
+  }
+
+  * {
+    border-color: var(--border);
+  }
+
+  body {
+    background-color: var(--surface-0);
+    color: #f0eeff;
+  }
+
+  ::selection {
+    background: rgba(124, 106, 255, 0.3);
+    color: #f0eeff;
+  }
+
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-2);
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--accent);
+  }
+}
+
+@layer components {
+  .glass {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .card {
+    @apply bg-surface-1 border border-[var(--border)] rounded-2xl;
+  }
+
+  .card-hover {
+    @apply card transition-all duration-200 hover:border-[var(--border-2)] hover:-translate-y-0.5;
+  }
+
+  .btn-primary {
+    @apply bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-xl px-4 py-2 transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0;
+  }
+
+  .btn-outline {
+    @apply border border-[var(--border-2)] hover:border-brand-600 text-[#a09cc0] hover:text-brand-400 font-medium rounded-xl px-4 py-2 transition-all duration-150;
+  }
+
+  .btn-ghost {
+    @apply text-[#a09cc0] hover:text-white hover:bg-surface-2 font-medium rounded-xl px-3 py-2 transition-all duration-150;
+  }
+
+  .input {
+    @apply w-full bg-surface-2 border border-[var(--border)] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-[#5a5680] focus:outline-none focus:border-brand-600 transition-colors;
+  }
+
+  .tag {
+    @apply px-2.5 py-0.5 rounded-full text-[11px] font-medium border;
+  }
+
+  .tag-purple {
+    @apply tag bg-brand-600/10 text-brand-400 border-brand-600/20;
+  }
+
+  .tag-green {
+    @apply tag bg-emerald-500/10 text-emerald-400 border-emerald-500/20;
+  }
+
+  .tag-orange {
+    @apply tag bg-orange-500/10 text-orange-400 border-orange-500/20;
+  }
+
+  .skeleton {
+    background: linear-gradient(90deg, var(--surface-2) 0%, var(--border) 50%, var(--surface-2) 100%);
+    background-size: 200%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  .gradient-text {
+    background: linear-gradient(135deg, #7c6aff, #22d3a5);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

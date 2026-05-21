@@ -1,0 +1,95 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── Helper functions ───────────────────────────────────────────
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isAuth() && request.auth.uid == uid;
+    }
+
+    function isValidUsername(username) {
+      return username.matches('^[a-zA-Z0-9_]{3,20}$');
+    }
+
+    function notTooLong(str, max) {
+      return str.size() <= max;
+    }
+
+    // ─── Users ──────────────────────────────────────────────────────
+    match /users/{userId} {
+      allow read: if isAuth();
+      allow create: if isOwner(userId)
+        && isValidUsername(request.resource.data.username)
+        && notTooLong(request.resource.data.bio, 200);
+      allow update: if isOwner(userId)
+        && !('username' in request.resource.data.diff(resource.data).affectedKeys())
+        && notTooLong(request.resource.data.bio, 200);
+      allow delete: if isOwner(userId);
+    }
+
+    // ─── Usernames (for uniqueness check) ───────────────────────────
+    match /usernames/{username} {
+      allow read: if true;  // needed for availability checks
+      allow create: if isAuth()
+        && request.resource.data.uid == request.auth.uid
+        && isValidUsername(username);
+      allow delete: if isAuth()
+        && resource.data.uid == request.auth.uid;
+    }
+
+    // ─── Posts ──────────────────────────────────────────────────────
+    match /posts/{postId} {
+      allow read: if isAuth();
+      allow create: if isAuth()
+        && request.resource.data.authorId == request.auth.uid
+        && notTooLong(request.resource.data.title, 200)
+        && notTooLong(request.resource.data.body, 2000)
+        && request.resource.data.tags.size() <= 5;
+      allow update: if isAuth() && (
+        // Author can edit content
+        (resource.data.authorId == request.auth.uid) ||
+        // Any user can like/bookmark (only those fields)
+        (request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['likes', 'likeCount', 'bookmarks']))
+      );
+      allow delete: if isOwner(resource.data.authorId);
+    }
+
+    // ─── Comments ───────────────────────────────────────────────────
+    match /comments/{commentId} {
+      allow read: if isAuth();
+      allow create: if isAuth()
+        && request.resource.data.authorId == request.auth.uid
+        && notTooLong(request.resource.data.body, 1000);
+      allow update: if isAuth() && (
+        (resource.data.authorId == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['body', 'updatedAt'])) ||
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'likeCount']))
+      );
+      allow delete: if isOwner(resource.data.authorId);
+    }
+
+    // ─── Reports ────────────────────────────────────────────────────
+    match /reports/{reportId} {
+      allow read: if false;  // Only admins (via Firebase Admin SDK)
+      allow create: if isAuth()
+        && request.resource.data.reporterId == request.auth.uid
+        && notTooLong(request.resource.data.description, 500);
+      allow update, delete: if false;
+    }
+
+    // ─── Notifications ──────────────────────────────────────────────
+    match /notifications/{notifId} {
+      allow read: if isAuth() && resource.data.userId == request.auth.uid;
+      allow create: if isAuth();
+      allow update: if isAuth()
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']);
+      allow delete: if false;
+    }
+  }
+}
